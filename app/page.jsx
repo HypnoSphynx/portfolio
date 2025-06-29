@@ -124,13 +124,11 @@ const LandingComponent = ({ searchParams }) => {
 							/>
 						</h1>
 						{/* Mail Button positioned at the right side below the name */}
-						<div className="absolute right-[5%] top-full mt-0 md:mt-2">
+						<div className="absolute right-[5%] top-full mt-0 md:mt-2 z-20">
 							<a 
-								href="mailto:zawad1@gmail.com" 
-								className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm"
-								target="_blank"
-								rel="noopener noreferrer"
-								title="Send email to zawad1@gmail.com"
+								href="mailto:zawadul1@gmail.com" 
+								className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-600 hover:border-zinc-500 text-zinc-300 hover:text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg backdrop-blur-sm cursor-pointer"
+								title="Send email to zawadul1@gmail.com"
 							>
 								<svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
