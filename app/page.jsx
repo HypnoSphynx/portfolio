@@ -41,7 +41,7 @@ const ai = [
 
 const navigation = [
 	{ name: "Home", href: "#home" },
-	{ name: "Proficiency", href: "#proficiency" },
+	{ name: "Tech Stack", href: "#proficiency" },
 	{ name: "Projects", href: "#projects" },
 	{ name: "Contact", href: "#contact" },
 ];
