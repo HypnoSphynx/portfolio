@@ -1,15 +1,15 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
-import React, { Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import data from "../data.json";
-import { ProfileOrganizations } from "./components/orgs";
-import { RecentActivity } from "./components/recent-activity";
-import { getUser } from "./data";
 import LoadingIndicator from "./components/loading-indicator";
 import ScrollSection from "./components/scroll-section";
 import CollapsibleNav from "./components/collapsible-nav";
 import GitHubProjects from "./components/github-projects";
 import EmailJSContact from "./components/emailjs-contact";
+import LoadingScreen from "./components/loading-screen";
 
 const languages = [
 	{ name: "Python", value: 90 },
@@ -46,31 +46,61 @@ const navigation = [
 	{ name: "Contact", href: "#contact" },
 ];
 
-export default async function Home(props) {
-	const searchParams = await props.searchParams;
-	return (
-		<LandingComponent searchParams={searchParams} />
-	)
+export default function Home(props) {
+	const [isLoading, setIsLoading] = useState(true);
+	const [searchParams, setSearchParams] = useState({});
+
+	useEffect(() => {
+		// Extract search params from URL
+		const urlParams = new URLSearchParams(window.location.search);
+		const customUsername = urlParams.get('customUsername');
+		setSearchParams({ customUsername });
+	}, []);
+
+	const handleLoadingComplete = () => {
+		setIsLoading(false);
+	};
+
+	if (isLoading) {
+		return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+	}
+
+	return <LandingComponent searchParams={searchParams} />;
 }
 
-const UserIcon = async ({ promise }) => {
-	const user = await promise;
-	return (
-		<Image alt='👨‍💻' width={100} height={100} src={user.avatar_url || data.avatarUrl} className="float-right rounded-full mx-4" />
-	);
-};
+const LandingComponent = ({ searchParams }) => {
+	const [user, setUser] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const username = searchParams?.customUsername || process.env.NEXT_PUBLIC_GITHUB_USERNAME || data.githubUsername;
 
-const UserText = async ({ promise }) => {
-	const user = await promise;
-	return (
-		<p>Hey there, this is {user.name || data.displayName}{'. '}{user.bio}</p>
-	);
-};
+	useEffect(() => {
+		const fetchUser = async () => {
+			try {
+				setLoading(true);
+				const response = await fetch(`https://api.github.com/users/${username}`);
+				
+				if (!response.ok) {
+					throw new Error(`GitHub API error: ${response.status}`);
+				}
+				
+				const userData = await response.json();
+				setUser(userData);
+			} catch (error) {
+				console.error('Error fetching user:', error);
+				setUser({ name: data.displayName, avatar_url: data.avatarUrl, bio: data.bio });
+			} finally {
+				setLoading(false);
+			}
+		};
 
-const LandingComponent = async ({ searchParams: { customUsername } }) => {
-	const username = customUsername || process.env.GITHUB_USERNAME || data.githubUsername;
-	const promise = getUser(username);
-	const user_name = await promise;
+		if (username) {
+			fetchUser();
+		}
+	}, [username]);
+
+	if (loading) {
+		return <LoadingIndicator />;
+	}
 
 	return (
 		<div className="flex h-screen overflow-hidden bg-linear-to-tl from-black via-zinc-600/20 to-black">
@@ -84,10 +114,14 @@ const LandingComponent = async ({ searchParams: { customUsername } }) => {
 					<div className="hidden w-full h-px animate-glow md:block animate-fade-left bg-linear-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0" />
 					<div className="relative">
 						<h1 className="flex items-center z-10 text-2xl hover:scale-110 text-transparent duration-1000 cursor-default text-edge-outline animate-title font-display sm:text-4xl md:text-6xl lg:text-9xl whitespace-nowrap bg-clip-text bg-white p-5">
-							{user_name.name}
-							<Suspense fallback={<p>Loading...</p>}>
-								<UserIcon promise={promise} />
-							</Suspense>
+							{user?.name || data.displayName}
+							<Image 
+								alt='👨‍💻' 
+								width={100} 
+								height={100} 
+								src={user?.avatar_url || data.avatarUrl} 
+								className="float-right rounded-full mx-4" 
+							/>
 						</h1>
 						{/* Mail Button positioned at the right side below the name */}
 						<div className="absolute right-[5%] top-full mt-0 md:mt-2">
@@ -120,15 +154,6 @@ const LandingComponent = async ({ searchParams: { customUsername } }) => {
 						I am eager to contribute to impactful work at the intersection of AI research and software development, 
 						while continuously growing as a leader and a passionate learner.
 						</p>
-						{/* <div className="text-base md:text-lg text-zinc-500 text-center">
-							<Suspense fallback={<div className="w-full h-px min-h-28">Loading...</div>}>
-								<div className="w-full h-px min-h-28">
-									<UserText promise={promise} />
-									<ProfileOrganizations username={username} />
-									<RecentActivity username={username} />
-								</div>
-							</Suspense>
-						</div> */}
 					</div>
 				</ScrollSection>
 
@@ -283,7 +308,7 @@ const LandingComponent = async ({ searchParams: { customUsername } }) => {
 										<div className="flex items-center space-x-4 group">
 											<div className="w-12 h-12 bg-green-600/20 rounded-lg flex items-center justify-center group-hover:bg-green-600/30 transition-colors">
 												<svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 24 24">
-													<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+													<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.237 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
 												</svg>
 											</div>
 											<div>
